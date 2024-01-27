@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "llm-plotting"
+version = "0.1.0"
+description = ""
+authors = ["Rowan Mankoo <rowan.mankoo@gmail.com>"]
+readme = "README.md"
+packages = [{include = "llm_plotting"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+langchain = "^0.1.4"
+pandas = "^2.2.0"
+openai = "^1.10.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
