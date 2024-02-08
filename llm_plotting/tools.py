@@ -64,13 +64,9 @@ class CodeValidationTool(BaseTool):
 
     def _execute_code(self, code: str) -> str:
         # TODO: handle case where this fails
-        sandbox = Sandbox(
-            template="Python3-DataAnalysis",
-        )
+        sandbox = Sandbox(template="my-agent-sandbox-test")
         self._upload_df_to_sandbox(self.df, sandbox)
         # TODO: figure this out adds to much time make docker image?
-        package_install = sandbox.process.start("pip install -U kaleido")
-        package_install.wait()
 
         sandbox.filesystem.write(self.filepath, code)
 
