@@ -1,0 +1,14 @@
+# This is a config for E2B sandbox template.
+# You can use 'template_id' (tn3bvfw713dxzl0l798c) or 'template_name (my-agent-sandbox-test) from this config to spawn a sandbox:
+
+# Python SDK
+# from e2b import Sandbox
+# sandbox = Sandbox(template='my-agent-sandbox-test')
+
+# JS SDK
+# import { Sandbox } from 'e2b'
+# const sandbox = await Sandbox.create({ template: 'my-agent-sandbox-test' })
+
+dockerfile = "e2b.Dockerfile"
+template_name = "my-agent-sandbox-test"
+template_id = "tn3bvfw713dxzl0l798c"

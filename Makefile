@@ -1,16 +1,9 @@
 # Define variables
-CC = gcc
-CFLAGS = -Wall -Werror
+SHELL := /bin/bash
 
-# Define targets and dependencies
-all: main
+# TODO: set this up correctly
+build_e2b:
+	e2b build --name "my-agent-sandbox-test"
 
-main: main.o
-	$(CC) $(CFLAGS) -o main main.o
 
-main.o: main.c
-	$(CC) $(CFLAGS) -c main.c
-
-clean:
-	rm -f main main.o
 

@@ -1,4 +1,5 @@
-# You can use most Debian-based base images
-FROM python:3.11.6
+# You can use most of the Debian-based base images
+FROM python:3.10.13-slim
 
-# Install dependencies and customize sandbox
+# Install plotly
+RUN pip install plotly pandas numpy seaborn matplotlib kaleido
