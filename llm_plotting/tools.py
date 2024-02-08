@@ -2,7 +2,7 @@
 import base64
 import logging
 from io import StringIO
-from typing import Optional, Type, List
+from typing import Optional, Type, List, Union
 
 import pandas as pd
 import requests
@@ -16,6 +16,7 @@ from langchain.tools import BaseTool, StructuredTool, tool
 
 from llm_plotting.settings import Settings
 from llm_plotting.prompts import generate_validation_llm_messages
+from llm_plotting.prompts import image_save_path
 
 Logger = logging.Logger(__name__)
 
@@ -35,6 +36,10 @@ class CodeValidationToolInput(BaseModel):
     code: str = Field(description="python code to generate plots")
 
 
+class SandboxExecutionError(Exception):
+    pass
+
+
 # TODO: add logging
 # TODO: add pydantic validation as method here
 # TODO: if code doesn't execute capture it and return error message
@@ -50,7 +55,7 @@ class CodeValidationTool(BaseTool):
     binary = "python3"
     filepath = "/index.py"
     df = pd.DataFrame()
-    image_in_bytes: List[str] = []
+    image_in_bytes_history: List[str] = []
 
     def _run(
         self,
@@ -59,28 +64,42 @@ class CodeValidationTool(BaseTool):
     ) -> str:
         """Use the tool."""
 
-        image_in_bytes = self._execute_code(code)
+        try:
+            image_in_bytes = self._execute_code(code)
+        except SandboxExecutionError:
+            return "Error: code failed to execute"
+
+        self.image_in_bytes_history.append(image_in_bytes)
         return self._validate_image(image_in_bytes)
 
     def _execute_code(self, code: str) -> str:
-        # TODO: handle case where this fails
-        sandbox = Sandbox(template="my-agent-sandbox-test")
-        self._upload_df_to_sandbox(self.df, sandbox)
-        # TODO: figure this out adds to much time make docker image?
+        # TODO: test case where this fails
+        # TODO: add streaming
 
-        sandbox.filesystem.write(self.filepath, code)
+        with Sandbox(
+            template="my-agent-sandbox-test", api_key=self.settings.e2b_api_key
+        ) as sandbox:
+            self._upload_df_to_sandbox(self.df, sandbox)
 
-        output = sandbox.process.start_and_wait(cmd=f"{self.binary} {self.filepath}")
+            sandbox.filesystem.write(self.filepath, code)
 
-        Logger.info(f"E2B Sandbox stdout: {output.stdout}")
-        Logger.info(f"E2B Sandbox stderr: {output.stderr}")
+            output = sandbox.process.start_and_wait(
+                cmd=f"{self.binary} {self.filepath}"
+            )
 
-        # TODO: ensure this is only defined once when doing prompting on save file name
-        image_in_bytes = sandbox.download_file("/home/user/figure.png")
+            if output.exit_code != 0:
+                Logger.info(f"E2B Sandbox failed to execute code: {code}")
+                Logger.info(f"E2B Sandbox stderr: {output.stderr}")
+                raise SandboxExecutionError
 
-        sandbox.close()
+            Logger.info(f"E2B Sandbox stdout: {output.stdout}")
+            Logger.info(f"E2B Sandbox stderr: {output.stderr}")
 
-        return image_in_bytes
+            image_in_bytes = sandbox.download_file(
+                "/home/user/{}".format(image_save_path)
+            )
+
+            return image_in_bytes
 
     def _upload_df_to_sandbox(self, df, sandbox):
         # TODO: add functionailty to upload multiple df's

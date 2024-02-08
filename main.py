@@ -12,7 +12,6 @@ from llm_plotting.prompts import code_generation_agent_prompt
 from llm_plotting.settings import Settings
 from llm_plotting.tools import CodeValidationTool
 from llm_plotting.utils import extract_metadata
-from llm_plotting.agent import CustomRunnableAgent
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
@@ -43,12 +42,17 @@ if __name__ == "__main__":
         verbose=True,
         return_intermediate_steps=True,
         handle_parsing_errors=True,
-        max_iterations=5,
+        max_iterations=2,
     )
 
     # ==================== Run agent ====================
     output = agent_executor.invoke(
         {"user_input": user_input, "metadata_json": metadata_json}
     )
+
+    code_validation_tool = [
+        tool for tool in agent_executor.tools if isinstance(tool, CodeValidationTool)
+    ][0]
+    image_in_bytes_history = code_validation_tool.image_in_bytes_history
 
     print("done")
