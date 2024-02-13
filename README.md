@@ -15,6 +15,7 @@ Because OpenAI Function Calling is finetuned for tool usage, we hardly need any 
 # TODO:
 
 - add snapshot pytests
+- lock into place description of plot or can, can add as agent configuration option
 
 
 - can use flasks g to store image data during handlig of a request.

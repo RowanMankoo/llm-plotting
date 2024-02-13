@@ -1,2 +1,7 @@
 *
-!e2b.Dockerfile
+!app.py
+!pyproject.toml
+!poetry.lock
+!.env
+!Dockerfile
+!llm_plotting/*.py

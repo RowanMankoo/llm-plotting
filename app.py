@@ -1,55 +1,60 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File
-import json
-import logging
-import pandas as pd
-from io import StringIO
-from langchain import hub
-from langchain.agents import AgentExecutor, create_openai_functions_agent
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.utils.function_calling import convert_to_openai_function
-from langchain_openai import ChatOpenAI
-from llm_plotting.prompts import code_generation_agent_prompt
-from llm_plotting.settings import Settings
-from llm_plotting.tools import CodeValidationTool
-from llm_plotting.utils import extract_metadata
+import streamlit as st
+from llm_plotting.utils import STAgentInterface, AgentSettings
+import asyncio
 
-app = FastAPI()
 
-@app.post("/generate_plot/")
-async def generate_plot(user_input: str, file: UploadFile = File(...)):
-    logging.basicConfig(level=logging.INFO)
+def main():
+    st.title("LLM-Plotting Tool")
+    st.write(
+        """
+    Please upload a CSV file and provide a description of the plot you want to create from the dataset.
+    The tool will then perform the following steps:
 
-    settings = Settings()
+    1. Generate the necessary code to construct the desired plot.
+    2. Execute this code within a secure, sandboxed environment to produce the plot.
+    3. Validate the quality of the plot by sending the resulting image to a vision-based LLM.
 
-    contents = await file.read()
-    df = pd.read_csv(StringIO(contents.decode("utf-8")))
-    metadata_json = extract_metadata(df)
-
-    code_validation_tool = CodeValidationTool(df=df, settings=settings)
-    tools = [code_validation_tool]
-
-    llm = ChatOpenAI(
-        model_name="gpt-3.5-turbo", api_key=settings.openai_api_key, temperature=0
+    This process will continue in a loop until the vision-based LLM approves of the plot or until the maximum number 
+    of iterations is reached
+    """
     )
 
-    agent = create_openai_functions_agent(llm, tools, code_generation_agent_prompt)
+    with st.sidebar.expander("Agent Settings"):
+        max_iterations = st.number_input(
+            "max_iterations", min_value=1, max_value=10, value=4, step=1
+        )
+        code_generation_llm_temperature = st.slider(
+            "code_generation_llm_temperature",
+            min_value=0.0,
+            max_value=1.0,
+            value=0.0,
+            step=0.01,
+        )
+        agent_settings = AgentSettings(
+            max_iterations=max_iterations,
+            code_generation_llm_temperature=code_generation_llm_temperature,
+        )
 
-    agent_executor = AgentExecutor(
-        agent=agent,
-        tools=tools,
-        verbose=True,
-        return_intermediate_steps=True,
-        handle_parsing_errors=True,
-        max_iterations=2,
+    uploaded_file = st.sidebar.file_uploader("Upload CSV", type="csv")
+    user_input = st.sidebar.text_area(
+        "Describe the plot you wish to construct out of the dataset",
+        "make a plot of the average salary of every job, and validate it",
+        height=200,
     )
 
-    output = agent_executor.invoke(
-        {"user_input": user_input, "metadata_json": metadata_json}
-    )
+    if st.sidebar.button("Generate Plot"):
+        if uploaded_file is not None:
+            try:
+                st_agent_interface = STAgentInterface(
+                    agent_settings, user_input, uploaded_file
+                )
+                with st.spinner("Generating plot..."):
+                    asyncio.run(st_agent_interface.invoke())
+            except Exception as e:
+                st.error(f"Error: {e}")
+        else:
+            st.error("You must upload a CSV file.")
 
-    code_validation_tool = [
-        tool for tool in agent_executor.tools if isinstance(tool, CodeValidationTool)
-    ][0]
-    image_in_bytes_history = code_validation_tool.image_in_bytes_history
 
-    return {"status": "done", "image_in_bytes_history": image_in_bytes_history}
+if __name__ == "__main__":
+    main()

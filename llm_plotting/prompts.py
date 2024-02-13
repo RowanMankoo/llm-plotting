@@ -1,10 +1,8 @@
 from langchain_core.prompts import (
     ChatPromptTemplate,
     MessagesPlaceholder,
-    HumanMessagePromptTemplate,
 )
-import pandas as pd
-import json
+
 
 image_save_path = "figure.png"
 
@@ -16,7 +14,7 @@ validate the code, but you are no good at validating this code yourself. You hav
 Here are some assumptions you should always follow:
 
 - Should always plot using python and with the plotly library
-- The df is stored under df.csv
+- The df is stored under df.csv, once you load it in with df = pd.read_csv('df.csv')
 - Save the figure via `pio.write_image(fig, '{image_save_path}')` and import plotly.io as pio at the top of the script 
 - Provide a brief description of what the plot is about in context of the data
 
@@ -47,19 +45,19 @@ code_generation_agent_prompt = ChatPromptTemplate.from_messages(
 )
 
 
-def generate_validation_llm_messages(base64_string: str):
+def generate_validation_llm_messages(base64_string: str, description: str):
     return [
         {
             "role": "system",
             "content": validation_llm_prompt_system_template,
         },
-        # TODO: insert the code description in here?
+        # TODO: explore prompt engineering on code description here
         {
             "role": "user",
             "content": [
                 {
                     "type": "text",
-                    "text": "Please validate this plot I made using the plotly library",
+                    "text": f"""Please validate this plot I made using the plotly library here is a breif description of the plot in context of the data: {description}""",
                 },
                 {
                     "type": "image_url",

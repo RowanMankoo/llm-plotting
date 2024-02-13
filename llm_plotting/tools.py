@@ -34,6 +34,9 @@ class NamedStringIO(StringIO):
 class CodeValidationToolInput(BaseModel):
     # TODO: figure out right definnition for this so agent can recognise
     code: str = Field(description="python code to generate plots")
+    description: str = Field(
+        description="description of the plot in context of the data"
+    )
 
 
 class SandboxExecutionError(Exception):
@@ -42,7 +45,6 @@ class SandboxExecutionError(Exception):
 
 # TODO: add logging
 # TODO: add pydantic validation as method here
-# TODO: if code doesn't execute capture it and return error message
 class CodeValidationTool(BaseTool):
     name = "CodeValidationTool"
     description = """
@@ -55,32 +57,32 @@ class CodeValidationTool(BaseTool):
     binary = "python3"
     filepath = "/index.py"
     df = pd.DataFrame()
-    image_in_bytes_history: List[str] = []
+    image_in_base64_history: List[str] = []
 
     def _run(
         self,
         code: str,
+        description: str,
         run_manager: Optional[CallbackManagerForToolRun] = None,
     ) -> str:
         """Use the tool."""
 
         try:
-            image_in_bytes = self._execute_code(code)
+            image_in_base64 = self._execute_code(code)
         except SandboxExecutionError:
             return "Error: code failed to execute"
 
-        self.image_in_bytes_history.append(image_in_bytes)
-        return self._validate_image(image_in_bytes)
+        self.image_in_base64_history.append(image_in_base64)
+        return self._validate_image(image_in_base64, description)
 
     def _execute_code(self, code: str) -> str:
         # TODO: test case where this fails
-        # TODO: add streaming
 
         with Sandbox(
             template="my-agent-sandbox-test", api_key=self.settings.e2b_api_key
         ) as sandbox:
             self._upload_df_to_sandbox(self.df, sandbox)
-
+            code = self._modify_code(code)
             sandbox.filesystem.write(self.filepath, code)
 
             output = sandbox.process.start_and_wait(
@@ -98,8 +100,19 @@ class CodeValidationTool(BaseTool):
             image_in_bytes = sandbox.download_file(
                 "/home/user/{}".format(image_save_path)
             )
+            image_in_base64 = base64.b64encode(image_in_bytes).decode("utf-8")
 
-            return image_in_bytes
+            return image_in_base64
+
+    def _modify_code(self, code):
+        """Inserts code to remove the df.csv file after it has been read in by the code to save space in sandbox"""
+        lines = code.split("\n")
+        for i, line in enumerate(lines):
+            if line.strip() == "df = pd.read_csv('df.csv')":
+                # Insert new lines after the current line
+                lines[i : i + 1] = [line, "import os", "os.remove('df.csv')"]
+                break
+        return "\n".join(lines)
 
     def _upload_df_to_sandbox(self, df, sandbox):
         # TODO: add functionailty to upload multiple df's
@@ -111,9 +124,7 @@ class CodeValidationTool(BaseTool):
         # Upload CSV to sandbox
         sandbox.upload_file(csv_buffer)
 
-    def _validate_image(self, image_in_bytes: str) -> str:
-
-        base64_string = base64.b64encode(image_in_bytes).decode("utf-8")
+    def _validate_image(self, image_in_base64: str, description: str) -> str:
 
         headers = {
             "Content-Type": "application/json",
@@ -123,7 +134,7 @@ class CodeValidationTool(BaseTool):
         # TODO: figure out max_tokens
         payload = {
             "model": "gpt-4-vision-preview",
-            "messages": generate_validation_llm_messages(base64_string),
+            "messages": generate_validation_llm_messages(image_in_base64, description),
             "max_tokens": 300,
         }
 
@@ -133,9 +144,13 @@ class CodeValidationTool(BaseTool):
         response.raise_for_status()
         return response.json()["choices"][0]["message"]["content"]
 
-    # TODO: figure out how to define this
     async def _arun(
-        self, code: str, run_manager: Optional[AsyncCallbackManagerForToolRun] = None
+        self,
+        code: str,
+        description: str,
+        run_manager: Optional[AsyncCallbackManagerForToolRun] = None,
     ) -> str:
-        """Use the tool asynchronously."""
-        raise NotImplementedError("custom_search does not support async")
+        """operations of tool are sequential and depend on eachother so no async implmentation."""
+        output = self._run(code, description)
+
+        return output

@@ -6,4 +6,10 @@ build_e2b:
 	e2b build --name "my-agent-sandbox-test"
 
 start_app:
-	python -m uvicorn app:app --reload
+	streamlit run app.py 
+
+build_app:
+	docker build -t my-app .
+
+run_app:
+	docker run -p 5000:5000 my-app:latest
