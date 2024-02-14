@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings
+from pydantic import BaseModel
 
 
 class Settings(BaseSettings):
@@ -8,3 +9,8 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         extra = "allow"
+
+
+class AgentSettings(BaseModel):
+    max_iterations: int = 5
+    code_generation_llm_temperature: float = 0

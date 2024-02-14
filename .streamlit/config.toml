@@ -1,11 +1,9 @@
 [global]
 developmentMode = false
-logLevel = "info"
 
 [server]
 headless = true
 port = 5000
-enableCORS = false
 maxUploadSize = 980 
 
 [browser]

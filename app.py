@@ -1,9 +1,12 @@
 import streamlit as st
-from llm_plotting.utils import STAgentInterface, AgentSettings
+from llm_plotting.utils import STAgentInterface
+from llm_plotting.settings import Settings, AgentSettings
 import asyncio
 
 
 def main():
+    settings = Settings()
+
     st.title("LLM-Plotting Tool")
     st.write(
         """
@@ -46,7 +49,7 @@ def main():
         if uploaded_file is not None:
             try:
                 st_agent_interface = STAgentInterface(
-                    agent_settings, user_input, uploaded_file
+                    settings, agent_settings, user_input, uploaded_file
                 )
                 with st.spinner("Generating plot..."):
                     asyncio.run(st_agent_interface.invoke())

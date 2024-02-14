@@ -1,6 +1,7 @@
 import pytest
 import pandas as pd
-from llm_plotting.settings import Settings
+from llm_plotting.settings import Settings, AgentSettings
+
 
 @pytest.fixture
 def example_code():
@@ -18,10 +19,20 @@ def example_code():
         "pio.write_image(fig, 'figure.png')"
     )
 
+
 @pytest.fixture
 def df():
     return pd.read_csv("jobs_in_data.csv")
 
+
 @pytest.fixture
 def settings():
     return Settings()
+
+
+@pytest.fixture
+def agent_settings():
+    return AgentSettings(
+        max_iterations=4,
+        code_generation_llm_temperature=0.0,
+    )
