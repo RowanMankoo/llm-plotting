@@ -105,13 +105,18 @@ class CodeValidationTool(BaseTool):
             return image_in_base64
 
     def _modify_code(self, code):
-        """Inserts code to remove the df.csv file after it has been read in by the code to save space in sandbox"""
+
+        # line to remove df.csv after reading it in
         lines = code.split("\n")
         for i, line in enumerate(lines):
             if line.strip() == "df = pd.read_csv('df.csv')":
                 # Insert new lines after the current line
                 lines[i : i + 1] = [line, "import os", "os.remove('df.csv')"]
                 break
+
+        # line to save the figure
+        lines.extend(["import plotly.io as pio", "pio.write_image(fig, 'figure.png')"])
+
         return "\n".join(lines)
 
     def _upload_df_to_sandbox(self, df, sandbox):

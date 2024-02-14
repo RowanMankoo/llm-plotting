@@ -14,8 +14,7 @@ validate the code, but you are no good at validating this code yourself. You hav
 Here are some assumptions you should always follow:
 
 - Should always plot using python and with the plotly library
-- The df is stored under df.csv, once you load it in with df = pd.read_csv('df.csv')
-- Save the figure via `pio.write_image(fig, '{image_save_path}')` and import plotly.io as pio at the top of the script 
+- The df is stored under df.csv please load it in with `df = pd.read_csv('df.csv')`
 - Provide a brief description of what the plot is about in context of the data
 
 Here is some metadata about the data:
