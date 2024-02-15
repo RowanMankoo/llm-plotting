@@ -2,7 +2,10 @@ from langchain_core.prompts import (
     ChatPromptTemplate,
     MessagesPlaceholder,
 )
+from llm_plotting.parsers import ValidationLLMOutput
+from langchain.output_parsers import PydanticOutputParser
 
+validation_llm_output_parser = PydanticOutputParser(pydantic_object=ValidationLLMOutput)
 
 image_save_path = "figure.png"
 
@@ -23,16 +26,19 @@ Here is some metadata about the data:
 
 
 validation_llm_prompt_system_template = """
-You are a highly skilled validation agent who will be examining plots genreated from pythons plotly library.
+You are a highly skilled validation agent who will be examining plots generated from pythons plotly library.
 You should validate if the plot is legiable and if anything is majorly wrong with it. such examples could be:
 - The plot is not legible
 - axis labels read to read
 - Something is obviously wrong with the plot
-If you find anything wrong with the plot, please provide feedback on how to fix it in plain english. 
-If the plot is sufficently legible, please return "The plot is legible". 
-If not please say in the output to regenerate the code with the changes and run the code through this 
-validation tool before returning code to user.
+If you find anything wrong with the plot, please provide a details on how to fix it
+
+If the plot is sufficently legible, please return "The plot is legible" in the feedback and return the current code without any changes.
+
+If you modify the code please also say in the response to run this modified code through validation again
 """
+#     + validation_llm_output_parser.get_format_instructions()
+# )
 
 code_generation_agent_prompt = ChatPromptTemplate.from_messages(
     [
@@ -44,7 +50,7 @@ code_generation_agent_prompt = ChatPromptTemplate.from_messages(
 )
 
 
-def generate_validation_llm_messages(base64_string: str, description: str):
+def generate_validation_llm_messages(base64_string: str, description: str, code: str):
     return [
         {
             "role": "system",
@@ -56,7 +62,7 @@ def generate_validation_llm_messages(base64_string: str, description: str):
             "content": [
                 {
                     "type": "text",
-                    "text": f"""Please validate this plot I made using the plotly library here is a breif description of the plot in context of the data: {description}""",
+                    "text": f"""Please validate this plot I made using the plotly library here is a breif description of the plot in context of the data: {description} along with the code to generate the plot: {code}""",
                 },
                 {
                     "type": "image_url",
@@ -65,3 +71,12 @@ def generate_validation_llm_messages(base64_string: str, description: str):
             ],
         },
     ]
+
+
+code_validation_tool_description = """
+Must be called everytime you have python code which is responsible for generating an image
+and you wish to validate it, this tool will validate the image and return a description of the observations
+along with the code to fix the observations if any are found. 
+
+Please not that any code returned by this tool should be validated again before being used as teh final output to the user
+"""

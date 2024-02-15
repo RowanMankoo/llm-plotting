@@ -16,7 +16,7 @@ from langchain.tools import BaseTool, StructuredTool, tool
 
 from llm_plotting.settings import Settings
 from llm_plotting.prompts import generate_validation_llm_messages
-from llm_plotting.prompts import image_save_path
+from llm_plotting.prompts import image_save_path, code_validation_tool_description
 
 Logger = logging.Logger(__name__)
 
@@ -47,10 +47,7 @@ class SandboxExecutionError(Exception):
 # TODO: add pydantic validation as method here
 class CodeValidationTool(BaseTool):
     name = "CodeValidationTool"
-    description = """
-    Must be called everytime you have python code which is responsible for generating an image
-    and you wish to validate it
-    """
+    description = code_validation_tool_description
     args_schema: Type[BaseModel] = CodeValidationToolInput
 
     settings = Settings()
@@ -73,7 +70,7 @@ class CodeValidationTool(BaseTool):
             return "Error: code failed to execute"
 
         self.image_in_base64_history.append(image_in_base64)
-        return self._validate_image(image_in_base64, description)
+        return self._validate_image(image_in_base64, description, code)
 
     def _execute_code(self, code: str) -> str:
         # TODO: test case where this fails
@@ -115,7 +112,12 @@ class CodeValidationTool(BaseTool):
                 break
 
         # line to save the figure
-        lines.extend(["import plotly.io as pio", "pio.write_image(fig, 'figure.png')"])
+        lines.extend(
+            [
+                "import plotly.io as pio",
+                f"pio.write_image(fig, '{image_save_path}')",
+            ]
+        )
 
         return "\n".join(lines)
 
@@ -129,7 +131,7 @@ class CodeValidationTool(BaseTool):
         # Upload CSV to sandbox
         sandbox.upload_file(csv_buffer)
 
-    def _validate_image(self, image_in_base64: str, description: str) -> str:
+    def _validate_image(self, image_in_base64: str, description: str, code: str) -> str:
 
         headers = {
             "Content-Type": "application/json",
@@ -139,7 +141,9 @@ class CodeValidationTool(BaseTool):
         # TODO: figure out max_tokens
         payload = {
             "model": "gpt-4-vision-preview",
-            "messages": generate_validation_llm_messages(image_in_base64, description),
+            "messages": generate_validation_llm_messages(
+                image_in_base64, description, code
+            ),
             "max_tokens": 300,
         }
 

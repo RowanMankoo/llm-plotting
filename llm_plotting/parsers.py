@@ -2,9 +2,11 @@ from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain.output_parsers import PydanticOutputParser
 
 
-class CodeAndDescription(BaseModel):
+class ValidationLLMOutput(BaseModel):
     code: str = Field(description="code to generate the plots")
-    description: str = Field(description="brief description of the code and plots")
+    validation_description: str = Field(
+        description="brief description of validation observations"
+    )
 
     # @validator("code")
     # def code_must_be_python(cls, v):
@@ -13,6 +15,5 @@ class CodeAndDescription(BaseModel):
     #     return v
 
 
-code_generation_output_parser = PydanticOutputParser(pydantic_object=CodeAndDescription)
 
 # TODO: add parsers in agent steps or tool outputs?
