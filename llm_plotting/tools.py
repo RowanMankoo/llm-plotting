@@ -14,11 +14,12 @@ from langchain.callbacks.manager import (
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools import BaseTool, StructuredTool, tool
 
-from llm_plotting.settings import Settings
+from llm_plotting.settings import Settings, AgentSettings
 from llm_plotting.prompts import generate_validation_llm_messages
 from llm_plotting.prompts import image_save_path, code_validation_tool_description
+import streamlit as st
 
-Logger = logging.Logger(__name__)
+Logger = logging.getLogger(st.__name__)
 
 
 class NamedStringIO(StringIO):
@@ -49,11 +50,13 @@ class CodeValidationTool(BaseTool):
     description = code_validation_tool_description
     args_schema: Type[BaseModel] = CodeValidationToolInput
 
-    settings = Settings()
     binary = "python3"
     filepath = "/index.py"
-    df = pd.DataFrame()
     image_in_base64_history: List[str] = []
+
+    settings = Settings()
+    temperature = 0.0
+    df = pd.DataFrame()
 
     def _run(
         self,
@@ -144,6 +147,7 @@ class CodeValidationTool(BaseTool):
                 image_in_base64, description, code
             ),
             "max_tokens": 300,
+            "temperature": self.temperature,
         }
 
         response = requests.post(

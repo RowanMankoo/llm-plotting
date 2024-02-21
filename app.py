@@ -1,18 +1,17 @@
-import streamlit as st
-from llm_plotting.streamlit_helper import STAgentInterface
-from llm_plotting.settings import Settings, AgentSettings
 import asyncio
 import logging
+import sys
 
-Logger = logging.Logger(__name__)
-# TODO: add info button at top left
-# TODO: add error handling a bit better?
-# TODO: figure out where logging is going
+import streamlit as st
+
+from llm_plotting.settings import AgentSettings, Settings
+from llm_plotting.streamlit_helper import STAgentInterface
+
+Logger = logging.Logger(st.__name__)
 
 
 def main():
     settings = Settings()
-    Logger.info("Starting LLM-Plottiwf233ng Tool")
 
     st.title("LLM-Plotting Tool")
     st.write(
@@ -40,9 +39,18 @@ def main():
             value=0.0,
             step=0.01,
         )
+
+        image_validation_llm_temperature = st.slider(
+            "image_validation_llm_temperature",
+            min_value=0.0,
+            max_value=1.0,
+            value=0.0,
+            step=0.01,
+        )
         agent_settings = AgentSettings(
             max_iterations=max_iterations,
             code_generation_llm_temperature=code_generation_llm_temperature,
+            image_validation_llm_temperature=image_validation_llm_temperature,
         )
 
     uploaded_file = st.sidebar.file_uploader("Upload CSV", type="csv")

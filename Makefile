@@ -1,6 +1,7 @@
 # Define variables
 SHELL := /bin/bash
 
+# TODO: add formatting and linting
 
 
 start_app:

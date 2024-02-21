@@ -1,5 +1,4 @@
 import base64
-import logging
 import textwrap
 from io import BytesIO
 from typing import Callable, Dict, List
@@ -14,9 +13,6 @@ from llm_plotting.tools import CodeValidationTool
 from llm_plotting.agent import setup_agent_executor
 from llm_plotting.prompt_helper import extract_metadata
 
-
-# TODO: use
-Logger = logging.Logger(__name__)
 
 
 class STFuncRepr(BaseModel):
@@ -49,7 +45,6 @@ class STAgentInterface:
             if isinstance(tool, CodeValidationTool)
         ][0]
 
-    # TODO: turn this into a yield
     async def invoke(self):
         chunks = []
 
@@ -104,7 +99,7 @@ class STAgentInterface:
 
             return [
                 STFuncRepr(st_func=st.image, kwargs={"image": image_in_bytes}),
-                STFuncRepr(st_func=st.write, args=[f"Tool Result: `{observation}`"]),
+                STFuncRepr(st_func=st.write, args=[f"Tool Result: {observation}"]),
             ]
 
     def _process_final_result(self, chunk) -> List[STFuncRepr]:

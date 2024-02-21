@@ -14,3 +14,4 @@ class Settings(BaseSettings):
 class AgentSettings(BaseModel):
     max_iterations: int = 5
     code_generation_llm_temperature: float = 0
+    image_validation_llm_temperature: float = 0

@@ -26,7 +26,11 @@ def setup_agent_executor(
     settings: Settings, agent_settings: AgentSettings, df: pd.DataFrame
 ):
 
-    code_validation_tool = CodeValidationTool(df=df, settings=settings)
+    code_validation_tool = CodeValidationTool(
+        df=df,
+        settings=settings,
+        temperature=agent_settings.image_validation_llm_temperature,
+    )
     tools = [code_validation_tool]
 
     llm = ChatOpenAI(
