@@ -32,7 +32,6 @@ class NamedStringIO(StringIO):
 
 
 class CodeValidationToolInput(BaseModel):
-    # TODO: figure out right definnition for this so agent can recognise
     code: str = Field(description="python code to generate plots")
     description: str = Field(
         description="description of the plot in context of the data"

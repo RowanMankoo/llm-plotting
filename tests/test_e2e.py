@@ -1,5 +1,5 @@
 import pytest
-from llm_plotting.utils import STAgentInterface
+from llm_plotting.streamlit_helper import STAgentInterface
 import asyncio
 from io import BytesIO
 

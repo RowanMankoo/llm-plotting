@@ -1,11 +1,18 @@
 import streamlit as st
-from llm_plotting.utils import STAgentInterface
+from llm_plotting.streamlit_helper import STAgentInterface
 from llm_plotting.settings import Settings, AgentSettings
 import asyncio
+import logging
+
+Logger = logging.Logger(__name__)
+# TODO: add info button at top left
+# TODO: add error handling a bit better?
+# TODO: figure out where logging is going
 
 
 def main():
     settings = Settings()
+    Logger.info("Starting LLM-Plottiwf233ng Tool")
 
     st.title("LLM-Plotting Tool")
     st.write(
@@ -41,13 +48,14 @@ def main():
     uploaded_file = st.sidebar.file_uploader("Upload CSV", type="csv")
     user_input = st.sidebar.text_area(
         "Describe the plot you wish to construct out of the dataset",
-        "make a plot of the average salary of every job, and validate it",
+        "make a plot of the average salary of every job",
         height=200,
     )
 
     if st.sidebar.button("Generate Plot"):
         if uploaded_file is not None:
             try:
+                Logger.info("Starting LLM-Plotting Tool")
                 st_agent_interface = STAgentInterface(
                     settings, agent_settings, user_input, uploaded_file
                 )
