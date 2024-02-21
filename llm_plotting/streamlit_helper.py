@@ -14,7 +14,6 @@ from llm_plotting.agent import setup_agent_executor
 from llm_plotting.prompt_helper import extract_metadata
 
 
-
 class STFuncRepr(BaseModel):
     st_func: Callable
     args: List = []
@@ -47,6 +46,7 @@ class STAgentInterface:
 
     async def invoke(self):
         chunks = []
+        st.write("---")
 
         async for chunk in self.agent_executor.astream(
             {"user_input": self.user_input, "metadata_json": self.metadata_json}
@@ -80,13 +80,29 @@ class STAgentInterface:
 
         return [
             STFuncRepr(
+                st_func=st.subheader,
+                args=[f"Calling Tool:"],
+            ),
+            STFuncRepr(
                 st_func=st.write,
-                args=[f"Calling Tool: `{action.tool}` with input:"],
+                args=[f"`{action.tool}` with inputs:"],
+            ),
+            STFuncRepr(
+                st_func=st.markdown,
+                args=[f"**Code:**"],
             ),
             STFuncRepr(
                 st_func=st.code,
                 args=[textwrap.indent(action.tool_input["code"], "    ")],
                 kwargs={"language": "python"},
+            ),
+            STFuncRepr(
+                st_func=st.markdown,
+                args=[f"**Description:**"],
+            ),
+            STFuncRepr(
+                st_func=st.write,
+                args=[f"{action.tool_input['description']}"],
             ),
         ]
 
@@ -98,9 +114,13 @@ class STAgentInterface:
             image_in_bytes = base64.b64decode(image_in_base64)
 
             return [
+                STFuncRepr(st_func=st.subheader, args=["Tool Result:"]),
                 STFuncRepr(st_func=st.image, kwargs={"image": image_in_bytes}),
-                STFuncRepr(st_func=st.write, args=[f"Tool Result: {observation}"]),
+                STFuncRepr(st_func=st.write, args=[f"{observation}"]),
             ]
 
     def _process_final_result(self, chunk) -> List[STFuncRepr]:
-        return [STFuncRepr(st_func=st.write, args=[f'Final Output: {chunk["output"]}'])]
+        return [
+            STFuncRepr(st_func=st.subheader, args=["Final Output:"]),
+            STFuncRepr(st_func=st.write, args=[f'{chunk["output"]}']),
+        ]
