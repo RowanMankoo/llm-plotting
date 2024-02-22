@@ -6,12 +6,17 @@ import streamlit as st
 
 from llm_plotting.settings import AgentSettings, Settings
 from llm_plotting.streamlit_helper import STAgentInterface
+import nest_asyncio
 
-Logger = logging.Logger(st.__name__)
+# Apply the patch at the beginning of your script
+# TODO: figure this out?
+nest_asyncio.apply()
+Logger = logging.getLogger(st.__name__)
 
 
 def main():
     settings = Settings()
+    st_agent_interface = None  # Initialize st_agent_interface
 
     st.title("LLM-Plotting Tool")
     st.write(
@@ -54,21 +59,50 @@ def main():
         )
 
     uploaded_file = st.sidebar.file_uploader("Upload CSV", type="csv")
-    user_input = st.sidebar.text_area(
-        "Describe the plot you wish to construct out of the dataset",
-        "make a plot of the average salary of every job",
-        height=200,
-    )
 
-    if st.sidebar.button("Generate Plot"):
+    if st.sidebar.button("Confirm Settings"):
+        st_agent_interface = STAgentInterface(settings, agent_settings, uploaded_file)
+        st.session_state.st_agent_interface = st_agent_interface
+        st.session_state.messages = []
+
+    # Initialize chat history
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
+    # Display chat messages from history on app rerun
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            message.get("st_func")(
+                *message.get("args", []), **message.get("kwargs", {})
+            )
+
+    if user_input := st.chat_input(
+        # "Describe the plot you wish to construct out of the dataset",
+        "Make a plot of the average salary of every job",
+    ):
         if uploaded_file is not None:
             try:
-                Logger.info("Starting LLM-Plotting Tool")
-                st_agent_interface = STAgentInterface(
-                    settings, agent_settings, user_input, uploaded_file
+                st.session_state.messages.append(
+                    {
+                        "role": "user",
+                        "st_func": st.markdown,
+                        "args": [f":green[{user_input}]"],
+                    }
                 )
-                with st.spinner("Generating plot..."):
-                    asyncio.run(st_agent_interface.invoke())
+                with st.chat_message("user"):
+                    st.markdown(f":green[{user_input}]")
+                Logger.info("Starting LLM-Plotting Tool")
+
+                if (
+                    st.session_state.get("st_agent_interface") is not None
+                ):  # Check if st_agent_interface is not None
+                    st_agent_interface = st.session_state.st_agent_interface
+                    with st.spinner("Generating plot..."):
+                        asyncio.run(st_agent_interface.invoke(user_input))
+                else:
+                    st.error(
+                        "You must confirm the settings before generating the plot."
+                    )
             except Exception as e:
                 st.error(f"Error: {e}")
         else:

@@ -2,6 +2,7 @@ import pandas as pd
 from langchain.agents import AgentExecutor, create_openai_functions_agent
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain_openai import ChatOpenAI
+from langchain.memory import ConversationBufferMemory
 
 from llm_plotting.prompts import code_generation_agent_prompt
 from llm_plotting.settings import AgentSettings, Settings
@@ -43,6 +44,12 @@ def setup_agent_executor(
 
     # TODO: add memory to agent
     agent = create_openai_functions_agent(llm, tools, code_generation_agent_prompt)
+    memory = ConversationBufferMemory(
+        memory_key="chat_history",
+        input_key="user_input",
+        output_key="output",  #'messages'
+        return_messages=True,
+    )
 
     return AgentExecutor(
         agent=agent,
@@ -51,4 +58,5 @@ def setup_agent_executor(
         return_intermediate_steps=False,
         handle_parsing_errors=True,
         max_iterations=agent_settings.max_iterations,
+        memory=memory,
     )

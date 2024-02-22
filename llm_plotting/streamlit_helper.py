@@ -25,13 +25,11 @@ class STAgentInterface:
         self,
         settings: Settings,
         agent_settings: AgentSettings,
-        user_input: str,
         uploaded_file: BytesIO,
         execute_st_funcs: bool = True,
     ):
         df = pd.read_csv(uploaded_file)
 
-        self.user_input = user_input
         self.metadata_json = extract_metadata(df)
         self.agent_executor = setup_agent_executor(settings, agent_settings, df)
         self.execute_st_funcs = execute_st_funcs
@@ -44,17 +42,27 @@ class STAgentInterface:
             if isinstance(tool, CodeValidationTool)
         ][0]
 
-    async def invoke(self):
+    async def invoke(self, user_input: str):
         chunks = []
-        st.write("---")
+        # with st.chat_message("assistant"):
+        #     st.write("---")
 
         async for chunk in self.agent_executor.astream(
-            {"user_input": self.user_input, "metadata_json": self.metadata_json}
+            {"user_input": user_input, "metadata_json": self.metadata_json}
         ):
             list_of_st_func_reprs = self.process_chunk(chunk)
             if self.execute_st_funcs:
                 for st_func_repr in list_of_st_func_reprs:
-                    st_func_repr.st_func(*st_func_repr.args, **st_func_repr.kwargs)
+                    st.session_state.messages.append(
+                        {
+                            "role": "assistant",
+                            "st_func": st_func_repr.st_func,
+                            "args": st_func_repr.args,
+                            "kwargs": st_func_repr.kwargs,
+                        }
+                    )
+                    with st.chat_message("assistant"):
+                        st_func_repr.st_func(*st_func_repr.args, **st_func_repr.kwargs)
                 st.write("---")
             chunks.append({"chunk": chunk, "st_func_reprs": list_of_st_func_reprs})
 
