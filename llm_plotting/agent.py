@@ -42,7 +42,6 @@ def setup_agent_executor(
         callbacks=[MyStreamingCallback()],
     )
 
-    # TODO: add memory to agent
     agent = create_openai_functions_agent(llm, tools, code_generation_agent_prompt)
     memory = ConversationBufferMemory(
         memory_key="chat_history",

@@ -1,17 +1,26 @@
 import asyncio
 import logging
 import sys
+from io import BytesIO
+import warnings
 
 import streamlit as st
+import pandas as pd
 
 from llm_plotting.settings import AgentSettings, Settings
 from llm_plotting.streamlit_helper import STAgentInterface
+from streamlit_extras.dataframe_explorer import dataframe_explorer
 import nest_asyncio
 
 # Apply the patch at the beginning of your script
 # TODO: figure this out?
 nest_asyncio.apply()
 Logger = logging.getLogger(st.__name__)
+warnings.filterwarnings(
+    "ignore", category=UserWarning, module="streamlit_extras.dataframe_explorer"
+)
+
+from streamlit_modal import Modal
 
 
 def main():
@@ -32,6 +41,13 @@ def main():
     of iterations is reached
     """
     )
+    modal = Modal(key="modal key", title="Informmation")
+
+    info_button = st.button(label="technical info", key="info_button")
+    if info_button:
+        with modal.container():
+            st.markdown("testtesttesttesttesttesttesttest")
+        st.write("done")
 
     with st.sidebar.expander("Agent Settings"):
         max_iterations = st.number_input(
@@ -63,11 +79,30 @@ def main():
         if uploaded_file is None:
             st.error("You must upload a CSV file before confirming the settings.")
         else:
+            st.session_state.uploaded_file = uploaded_file.getvalue()
+
+            uploaded_file.seek(0)
             st_agent_interface = STAgentInterface(
                 settings, agent_settings, uploaded_file
             )
             st.session_state.st_agent_interface = st_agent_interface
             st.session_state.messages = []
+
+    st.markdown("---")
+    st.subheader("Dataset Explorer")
+    st.write("Explore the dataset to understand its structure and contents.")
+
+    uploaded_file = st.session_state.get("uploaded_file", None)
+    if uploaded_file is not None:
+        uploaded_file = BytesIO(uploaded_file)
+        filtered_df = dataframe_explorer(pd.read_csv(uploaded_file), case=False)
+        st.dataframe(filtered_df)
+    else:
+        st.markdown(
+            "The dataset will be displayed below once you upload a CSV file and confirm the settings."
+        )
+
+    st.markdown("---")
 
     # Initialize chat history
     if "messages" not in st.session_state:
