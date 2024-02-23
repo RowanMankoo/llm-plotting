@@ -19,7 +19,6 @@ class STFuncRepr(BaseModel):
     args: List = []
     kwargs: Dict = {}
 
-
 class STAgentInterface:
     def __init__(
         self,
@@ -34,6 +33,31 @@ class STAgentInterface:
         self.agent_executor = setup_agent_executor(settings, agent_settings, df)
         self.execute_st_funcs = execute_st_funcs
 
+    @staticmethod
+    def store_and_display_message(
+        st_func: Callable, args: List = [], kwargs: Dict = {}, role: str = None
+    ):
+        st.session_state.messages.append(
+            {
+                "role": role,
+                "st_func": st_func,
+                "args": args,
+                "kwargs": kwargs,
+            }
+        )
+
+        STAgentInterface.display_message(st_func, args, kwargs, role)
+
+    @staticmethod
+    def display_message(
+        st_func: Callable, args: List = [], kwargs: Dict = {}, role: str = None
+    ):
+        if role is None:
+            st_func(*args, **kwargs)
+        else:
+            with st.chat_message(role):
+                st_func(*args, **kwargs)
+
     @property
     def code_validation_tool(self):
         return [
@@ -44,8 +68,6 @@ class STAgentInterface:
 
     async def invoke(self, user_input: str):
         chunks = []
-        # with st.chat_message("assistant"):
-        #     st.write("---")
 
         async for chunk in self.agent_executor.astream(
             {"user_input": user_input, "metadata_json": self.metadata_json}
@@ -53,17 +75,12 @@ class STAgentInterface:
             list_of_st_func_reprs = self.process_chunk(chunk)
             if self.execute_st_funcs:
                 for st_func_repr in list_of_st_func_reprs:
-                    st.session_state.messages.append(
-                        {
-                            "role": "assistant",
-                            "st_func": st_func_repr.st_func,
-                            "args": st_func_repr.args,
-                            "kwargs": st_func_repr.kwargs,
-                        }
+                    STAgentInterface.store_and_display_message(
+                        st_func_repr.st_func,
+                        st_func_repr.args,
+                        st_func_repr.kwargs,
                     )
-                    with st.chat_message("assistant"):
-                        st_func_repr.st_func(*st_func_repr.args, **st_func_repr.kwargs)
-                st.write("---")
+                STAgentInterface.store_and_display_message(st.write, args=["---"])
             chunks.append({"chunk": chunk, "st_func_reprs": list_of_st_func_reprs})
 
         return chunks

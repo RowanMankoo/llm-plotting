@@ -57,13 +57,17 @@ def main():
             code_generation_llm_temperature=code_generation_llm_temperature,
             image_validation_llm_temperature=image_validation_llm_temperature,
         )
-
     uploaded_file = st.sidebar.file_uploader("Upload CSV", type="csv")
 
     if st.sidebar.button("Confirm Settings"):
-        st_agent_interface = STAgentInterface(settings, agent_settings, uploaded_file)
-        st.session_state.st_agent_interface = st_agent_interface
-        st.session_state.messages = []
+        if uploaded_file is None:
+            st.error("You must upload a CSV file before confirming the settings.")
+        else:
+            st_agent_interface = STAgentInterface(
+                settings, agent_settings, uploaded_file
+            )
+            st.session_state.st_agent_interface = st_agent_interface
+            st.session_state.messages = []
 
     # Initialize chat history
     if "messages" not in st.session_state:
@@ -71,10 +75,12 @@ def main():
 
     # Display chat messages from history on app rerun
     for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            message.get("st_func")(
-                *message.get("args", []), **message.get("kwargs", {})
-            )
+        role = message.get("role", None)
+        st_func = message["st_func"]
+        args = message.get("args", [])
+        kwargs = message.get("kwargs", {})
+
+        STAgentInterface.display_message(st_func, args, kwargs, role)
 
     if user_input := st.chat_input(
         # "Describe the plot you wish to construct out of the dataset",
@@ -82,15 +88,11 @@ def main():
     ):
         if uploaded_file is not None:
             try:
-                st.session_state.messages.append(
-                    {
-                        "role": "user",
-                        "st_func": st.markdown,
-                        "args": [f":green[{user_input}]"],
-                    }
+                STAgentInterface.store_and_display_message(
+                    st.markdown,
+                    args=[f":green[{user_input}]"],
+                    role="user",
                 )
-                with st.chat_message("user"):
-                    st.markdown(f":green[{user_input}]")
                 Logger.info("Starting LLM-Plotting Tool")
 
                 if (

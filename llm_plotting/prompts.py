@@ -36,14 +36,17 @@ Here is some metadata about the data:
 
 validation_llm_prompt_system_template = f"""
 You are a highly skilled validation agent who will be examining plots generated from pythons plotly library.
+You will be given the code along with the image and a description of the plot in context of the data.
 You should validate if the plot is legiable and if anything is majorly wrong with it. such examples could be:
 - The plot is not legible
 - axis labels read to read
+- no text is overlapping
 - Something is obviously wrong with the plot
 If you find anything wrong with the plot, please provide a details on how to fix it in plain english and bullet point format
  and make sure not to return code.
 If the plot is sufficently legible, please return {validation_tool_acceptable_output_message} in the feedback 
-
+If from the description of the plot you think legibility issues cannot be resolved with simple adjustments due to the complexity and size of the dataset
+please state so in the feedback
 """
 
 
