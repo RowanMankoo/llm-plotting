@@ -112,7 +112,7 @@ class CodeValidationTool(BaseTool):
     def _upload_df_to_sandbox(self, df, sandbox):
         csv_buffer = NamedStringIO(name="df.csv")
         df.to_csv(csv_buffer, index=False)
-        csv_buffer.seek(0)  # Go to the start of the StringIO object
+        csv_buffer.seek(0)
 
         sandbox.upload_file(csv_buffer)
 
@@ -123,7 +123,6 @@ class CodeValidationTool(BaseTool):
             "Authorization": f"Bearer {self.settings.openai_api_key}",
         }
 
-        # TODO: figure out max_tokens
         payload = {
             "model": "gpt-4-vision-preview",
             "messages": generate_validation_llm_messages(image_in_base64, description, code),

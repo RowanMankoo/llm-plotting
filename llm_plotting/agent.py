@@ -38,6 +38,7 @@ def setup_agent_executor(settings: Settings, agent_settings: AgentSettings, df: 
         temperature=agent_settings.code_generation_llm_temperature,
         streaming=True,
         callbacks=[MyStreamingCallback()],
+        max_tokens=500,
     )
 
     agent = create_openai_functions_agent(llm, tools, CODE_GENERATION_AGENT_PROMPT)

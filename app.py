@@ -86,7 +86,7 @@ def main():
 
     if user_input := st.chat_input(
         # "Describe the plot you wish to construct out of the dataset",
-        "Please describe the plot you wish to construct out of the dataset or ask any questions about the data.",
+        "Please enter request here",
     ):
         if uploaded_file is not None:
             try:
