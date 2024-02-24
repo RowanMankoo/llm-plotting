@@ -40,8 +40,6 @@ class SandboxExecutionError(Exception):
     pass
 
 
-# TODO: add logging
-# TODO: add pydantic validation as method here
 class CodeValidationTool(BaseTool):
     name = "CodeValidationTool"
     description = CODE_VALIDATION_TOOL_DESCRIPTION
@@ -75,7 +73,6 @@ class CodeValidationTool(BaseTool):
         return self._validate_image(code_output, description, code)
 
     def _execute_code(self, code: str, plotting_code: bool) -> str:
-        # TODO: test case where this fails
 
         with Sandbox(template="my-agent-sandbox-test", api_key=self.settings.e2b_api_key) as sandbox:
             self._upload_df_to_sandbox(self.df, sandbox)
@@ -101,10 +98,8 @@ class CodeValidationTool(BaseTool):
 
     def _modify_code(self, code):
 
-        # line to remove df.csv after reading it in
         lines = code.split("\n")
 
-        # line to save the figure
         lines.extend(
             [
                 "import plotly.io as pio",
@@ -115,13 +110,10 @@ class CodeValidationTool(BaseTool):
         return "\n".join(lines)
 
     def _upload_df_to_sandbox(self, df, sandbox):
-        # TODO: add functionailty to upload multiple df's
-        # Convert DataFrame to CSV format in memory
         csv_buffer = NamedStringIO(name="df.csv")
         df.to_csv(csv_buffer, index=False)
         csv_buffer.seek(0)  # Go to the start of the StringIO object
 
-        # Upload CSV to sandbox
         sandbox.upload_file(csv_buffer)
 
     def _validate_image(self, image_in_base64: str, description: str, code: str) -> str:

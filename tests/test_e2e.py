@@ -5,7 +5,7 @@ import pytest
 
 from llm_plotting.streamlit_helper import STAgentInterface
 
-
+# TODO: make async e2e tests work
 @pytest.mark.e2e
 def test_e2e(example_code, df, settings, agent_settings):
     # turn df into BytesIO

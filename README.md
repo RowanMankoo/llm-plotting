@@ -1,18 +1,28 @@
 # LLM-plotting
 
-### Agent Prompt
-Because OpenAI Function Calling is finetuned for tool usage, we hardly need any instructions on how to reason, or how to output format.
+## Agent 
 
- - decision madew to join code execution and validation into one tool so we don't have to send raw image bytes through LLM to waste tokens
+
 
 ## Setup
-- Create a python venv with version 3.10 using either virtualenv or conda
-- Install dependencies with poetry install
-- Create a .env file in root with `OPENAI_API_KEY=<Your api key>`
-- Example dataset taken from https://www.kaggle.com/datasets/hummaamqaasim/jobs-in-data?resource=download
+1. Create a .env file in root and populate keys according to the .env.example file
+    - To get an e2b key please go [here](https://e2b.dev/docs)
+2. Create the approate virtual env and install packages according to the pyproject.toml
+3. Follow E2B set up steps below
+4. To run app locally run `make run_app`
 
 
-# TODO:
+### E2B setup
+
+This is a tool used in the repo to interact with a sandboxed python enviroment
+
+1. Install npm
+2. `make install_e2b_cli_and_login`
+3. `make build_e2b`
+
+
+## V2 ideas
 
 - add snapshot pytests
-
+- add ability to upload multiple df's
+- Example dataset taken from https://www.kaggle.com/datasets/hummaamqaasim/jobs-in-data?resource=download

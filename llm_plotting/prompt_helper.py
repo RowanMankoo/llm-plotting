@@ -18,24 +18,6 @@ def parse_requirements(requirments_file_path: str, names_only: bool = False) -> 
                 result += f"{package}, "
             else:
                 result += f'{package} = "{version}"\n'
-        elif ">=" in line:
-            package, version = line.split(">=")
-            if names_only:
-                result += f"{package}, "
-            else:
-                result += f'{package} = "^{version}.0"\n'
-        elif "~=" in line:
-            package, version = line.split("~=")
-            if names_only:
-                result += f"{package}, "
-            else:
-                result += f'{package} = "^{version}"\n'
-        else:
-            if names_only:
-                result += f"{line}, "
-            else:
-                result += f'{line} = "^"\n'
-
     return result.rstrip(", ") if names_only else result
 
 

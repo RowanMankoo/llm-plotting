@@ -1,7 +1,7 @@
 # Define variables
 SHELL := /bin/bash
 MAX_LINE_SIZE := 120
-# TODO: add formatting and linting
+
 make pre-lint:
 	poetry run black --preview --line-length $(MAX_LINE_SIZE) .
 	poetry run isort --profile=black --line-length $(MAX_LINE_SIZE) .
