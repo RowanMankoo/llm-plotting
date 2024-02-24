@@ -13,7 +13,7 @@ With this input prompt the agent begins to generate code to fulfill the user's r
 
  Once these are sent to the app the app will gather some metadata about the input dataframe such as the column names, shape, dtypes, missing vlaues and other statistical summaries this is stored in json format and sent in as a part of a prompt. This is done as it would cost too many tokens to send in the whole dataset so just the metadata is sent in the allow the LLM to have a feel of the data.
 
-Then the LLM will start to generate code to fulfull the request adn this code is sent to a code validation tool and it will keep iterating until it is satified with sending the user an output, below we can see more detail on this workflow.
+Then the LLM will start to generate code to fulfull the request and this code is sent to a code validation tool and it will keep iterating until it is satified with sending the user an output, below we can see more detail on this workflow.
 
 ![agent_workflow](llm_plotting/assets/agent_workflow.png)
 
@@ -34,7 +34,7 @@ This is a tool used in the repo to run the generated python code within a sandbo
 
 - Safety: Running the agent's code in a separate environment from the application ensures security. It prevents any unintended side effects that could potentially disrupt or harm the application's runtime environment.
 
-To set this up please follow these steps:
+To set this up please navigate to the e2b folder and follow these steps:
 
 1. Install npm
 2. `make install_e2b_cli_and_login`
