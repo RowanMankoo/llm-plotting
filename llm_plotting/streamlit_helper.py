@@ -19,6 +19,7 @@ class STFuncRepr(BaseModel):
     args: List = []
     kwargs: Dict = {}
 
+
 class STAgentInterface:
     def __init__(
         self,
@@ -95,8 +96,7 @@ class STAgentInterface:
                 list_of_st_func_reprs = self._process_final_result(chunk)
             return list_of_st_func_reprs
         except:
-            # TODO: think about how to handle this
-            return []
+            return [STFuncRepr(st_func=st.error, args=["Error rendering chunk"])]
 
     def _process_agent_action(self, chunk) -> List[STFuncRepr]:
         action = chunk["actions"][0]
@@ -135,14 +135,21 @@ class STAgentInterface:
         observation = chunk["steps"][0].observation
         prior_tool_name = chunk["messages"][0].name
         if prior_tool_name == "CodeValidationTool":
-            image_in_base64 = self.code_validation_tool.image_in_base64_history[-1]
-            image_in_bytes = base64.b64decode(image_in_base64)
+            plotting_code = chunk["steps"][0].action.tool_input["plotting_code"]
+            if plotting_code:
+                image_in_base64 = self.code_validation_tool.image_in_base64_history[-1]
+                image_in_bytes = base64.b64decode(image_in_base64)
 
-            return [
-                STFuncRepr(st_func=st.subheader, args=["Tool Result:"]),
-                STFuncRepr(st_func=st.image, kwargs={"image": image_in_bytes}),
-                STFuncRepr(st_func=st.write, args=[f"{observation}"]),
-            ]
+                return [
+                    STFuncRepr(st_func=st.subheader, args=["Tool Result:"]),
+                    STFuncRepr(st_func=st.image, kwargs={"image": image_in_bytes}),
+                    STFuncRepr(st_func=st.write, args=[f"{observation}"]),
+                ]
+            else:
+                return [
+                    STFuncRepr(st_func=st.subheader, args=["Tool Result:"]),
+                    STFuncRepr(st_func=st.write, args=[f"{observation}"]),
+                ]
 
     def _process_final_result(self, chunk) -> List[STFuncRepr]:
         return [

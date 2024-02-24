@@ -16,7 +16,7 @@ from langchain.tools import BaseTool, StructuredTool, tool
 
 from llm_plotting.settings import Settings, AgentSettings
 from llm_plotting.prompts import generate_validation_llm_messages
-from llm_plotting.prompts import image_save_path, code_validation_tool_description
+from llm_plotting.prompts import IMAGE_SAVE_PATH, CODE_VALIDATION_TOOL_DESCRIPTION
 import streamlit as st
 
 Logger = logging.getLogger(st.__name__)
@@ -37,6 +37,9 @@ class CodeValidationToolInput(BaseModel):
     description: str = Field(
         description="description of the plot in context of the data"
     )
+    plotting_code: bool = Field(
+        description="if True, the code is for plotting, if False, the code is for answering questions about the data"
+    )
 
 
 class SandboxExecutionError(Exception):
@@ -47,7 +50,7 @@ class SandboxExecutionError(Exception):
 # TODO: add pydantic validation as method here
 class CodeValidationTool(BaseTool):
     name = "CodeValidationTool"
-    description = code_validation_tool_description
+    description = CODE_VALIDATION_TOOL_DESCRIPTION
     args_schema: Type[BaseModel] = CodeValidationToolInput
 
     binary = "python3"
@@ -62,62 +65,64 @@ class CodeValidationTool(BaseTool):
         self,
         code: str,
         description: str,
+        plotting_code: bool,
         run_manager: Optional[CallbackManagerForToolRun] = None,
     ) -> str:
         """Use the tool."""
 
         try:
-            image_in_base64 = self._execute_code(code)
-        except SandboxExecutionError:
-            return "Error: code failed to execute"
+            code_output = self._execute_code(code, plotting_code)
+            if not plotting_code:
+                return code_output
+        except SandboxExecutionError as e:
+            return str(e)
 
-        self.image_in_base64_history.append(image_in_base64)
-        return self._validate_image(image_in_base64, description, code)
+        self.image_in_base64_history.append(code_output)
+        return self._validate_image(code_output, description, code)
 
-    def _execute_code(self, code: str) -> str:
+    def _execute_code(self, code: str, plotting_code: bool) -> str:
         # TODO: test case where this fails
 
         with Sandbox(
             template="my-agent-sandbox-test", api_key=self.settings.e2b_api_key
         ) as sandbox:
             self._upload_df_to_sandbox(self.df, sandbox)
-            code = self._modify_code(code)
+            code = self._modify_code(code) if plotting_code else code
             sandbox.filesystem.write(self.filepath, code)
 
             output = sandbox.process.start_and_wait(
                 cmd=f"{self.binary} {self.filepath}"
             )
 
-            if output.exit_code != 0:
-                Logger.info(f"E2B Sandbox failed to execute code: {code}")
-                Logger.info(f"E2B Sandbox stderr: {output.stderr}")
-                raise SandboxExecutionError
-
             Logger.info(f"E2B Sandbox stdout: {output.stdout}")
             Logger.info(f"E2B Sandbox stderr: {output.stderr}")
 
-            image_in_bytes = sandbox.download_file(
-                "/home/user/{}".format(image_save_path)
-            )
-            image_in_base64 = base64.b64encode(image_in_bytes).decode("utf-8")
+            if output.exit_code != 0:
+                raise SandboxExecutionError(
+                    f"Failed to execute code with error: {output.stderr}"
+                )
 
-            return image_in_base64
+            return self._handle_execute_code_output(output, plotting_code, sandbox)
+
+    def _handle_execute_code_output(self, output, plotting_code, sandbox):
+        if plotting_code:
+            image_in_bytes = sandbox.download_file(
+                "/home/user/{}".format(IMAGE_SAVE_PATH)
+            )
+            return base64.b64encode(image_in_bytes).decode("utf-8")
+        else:
+            return output.stdout
 
     def _modify_code(self, code):
 
         # line to remove df.csv after reading it in
         lines = code.split("\n")
-        for i, line in enumerate(lines):
-            if line.strip() == "df = pd.read_csv('df.csv')":
-                # Insert new lines after the current line
-                lines[i : i + 1] = [line, "import os", "os.remove('df.csv')"]
-                break
 
         # line to save the figure
         lines.extend(
             [
                 "import plotly.io as pio",
-                f"pio.write_image(fig, '{image_save_path}')",
+                f"pio.write_image(fig, '{IMAGE_SAVE_PATH }')",
             ]
         )
 
@@ -160,9 +165,10 @@ class CodeValidationTool(BaseTool):
         self,
         code: str,
         description: str,
+        plotting_code: bool,
         run_manager: Optional[AsyncCallbackManagerForToolRun] = None,
     ) -> str:
         """operations of tool are sequential and depend on eachother so no async implmentation."""
-        output = self._run(code, description)
+        output = self._run(code, description, plotting_code)
 
         return output

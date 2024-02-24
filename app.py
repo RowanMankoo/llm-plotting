@@ -134,7 +134,7 @@ def main():
                     st.session_state.get("st_agent_interface") is not None
                 ):  # Check if st_agent_interface is not None
                     st_agent_interface = st.session_state.st_agent_interface
-                    with st.spinner("Generating plot..."):
+                    with st.spinner("Running Agent..."):
                         asyncio.run(st_agent_interface.invoke(user_input))
                 else:
                     st.error(

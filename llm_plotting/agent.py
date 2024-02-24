@@ -4,7 +4,7 @@ from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain_openai import ChatOpenAI
 from langchain.memory import ConversationBufferMemory
 
-from llm_plotting.prompts import code_generation_agent_prompt
+from llm_plotting.prompts import CODE_GENERATION_AGENT_PROMPT
 from llm_plotting.settings import AgentSettings, Settings
 from llm_plotting.tools import CodeValidationTool
 
@@ -42,7 +42,7 @@ def setup_agent_executor(
         callbacks=[MyStreamingCallback()],
     )
 
-    agent = create_openai_functions_agent(llm, tools, code_generation_agent_prompt)
+    agent = create_openai_functions_agent(llm, tools, CODE_GENERATION_AGENT_PROMPT)
     memory = ConversationBufferMemory(
         memory_key="chat_history",
         input_key="user_input",
