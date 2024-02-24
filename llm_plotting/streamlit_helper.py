@@ -14,6 +14,33 @@ from llm_plotting.agent import setup_agent_executor
 from llm_plotting.prompt_helper import extract_metadata
 
 
+def display_and_get_agent_settings():
+    with st.sidebar.expander("Agent Settings"):
+        max_iterations = st.number_input(
+            "max_iterations", min_value=1, max_value=10, value=4, step=1
+        )
+        code_generation_llm_temperature = st.slider(
+            "code_generation_llm_temperature",
+            min_value=0.0,
+            max_value=1.0,
+            value=0.0,
+            step=0.01,
+        )
+
+        image_validation_llm_temperature = st.slider(
+            "image_validation_llm_temperature",
+            min_value=0.0,
+            max_value=1.0,
+            value=0.0,
+            step=0.01,
+        )
+        return AgentSettings(
+            max_iterations=max_iterations,
+            code_generation_llm_temperature=code_generation_llm_temperature,
+            image_validation_llm_temperature=image_validation_llm_temperature,
+        )
+
+
 class STFuncRepr(BaseModel):
     st_func: Callable
     args: List = []

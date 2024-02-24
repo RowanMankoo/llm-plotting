@@ -1,18 +1,19 @@
 import asyncio
 import logging
-import sys
 from io import BytesIO
 import warnings
 
 import streamlit as st
 import pandas as pd
 
-from llm_plotting.settings import AgentSettings, Settings
-from llm_plotting.streamlit_helper import STAgentInterface
+from llm_plotting.settings import Settings
+from llm_plotting.streamlit_helper import (
+    STAgentInterface,
+    display_and_get_agent_settings,
+)
 from streamlit_extras.dataframe_explorer import dataframe_explorer
 import nest_asyncio
 
-# Apply the patch at the beginning of your script
 # TODO: figure this out?
 nest_asyncio.apply()
 Logger = logging.getLogger(st.__name__)
@@ -25,7 +26,7 @@ from streamlit_modal import Modal
 
 def main():
     settings = Settings()
-    st_agent_interface = None  # Initialize st_agent_interface
+    st_agent_interface = None
 
     st.title("LLM-Plotting Tool")
     st.write(
@@ -41,7 +42,7 @@ def main():
     of iterations is reached
     """
     )
-    modal = Modal(key="modal key", title="Informmation")
+    modal = Modal(key="modal key", title="Information")
 
     info_button = st.button(label="technical info", key="info_button")
     if info_button:
@@ -49,30 +50,7 @@ def main():
             st.markdown("testtesttesttesttesttesttesttest")
         st.write("done")
 
-    with st.sidebar.expander("Agent Settings"):
-        max_iterations = st.number_input(
-            "max_iterations", min_value=1, max_value=10, value=4, step=1
-        )
-        code_generation_llm_temperature = st.slider(
-            "code_generation_llm_temperature",
-            min_value=0.0,
-            max_value=1.0,
-            value=0.0,
-            step=0.01,
-        )
-
-        image_validation_llm_temperature = st.slider(
-            "image_validation_llm_temperature",
-            min_value=0.0,
-            max_value=1.0,
-            value=0.0,
-            step=0.01,
-        )
-        agent_settings = AgentSettings(
-            max_iterations=max_iterations,
-            code_generation_llm_temperature=code_generation_llm_temperature,
-            image_validation_llm_temperature=image_validation_llm_temperature,
-        )
+    agent_settings = display_and_get_agent_settings()
     uploaded_file = st.sidebar.file_uploader("Upload CSV", type="csv")
 
     if st.sidebar.button("Confirm Settings"):
@@ -104,7 +82,6 @@ def main():
 
     st.markdown("---")
 
-    # Initialize chat history
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
@@ -119,7 +96,7 @@ def main():
 
     if user_input := st.chat_input(
         # "Describe the plot you wish to construct out of the dataset",
-        "Make a plot of the average salary of every job",
+        "Please describe the plot you wish to construct out of the dataset or ask any questions about the data.",
     ):
         if uploaded_file is not None:
             try:
@@ -130,9 +107,7 @@ def main():
                 )
                 Logger.info("Starting LLM-Plotting Tool")
 
-                if (
-                    st.session_state.get("st_agent_interface") is not None
-                ):  # Check if st_agent_interface is not None
+                if st.session_state.get("st_agent_interface") is not None:
                     st_agent_interface = st.session_state.st_agent_interface
                     with st.spinner("Running Agent..."):
                         asyncio.run(st_agent_interface.invoke(user_input))
