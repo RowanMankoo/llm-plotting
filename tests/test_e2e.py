@@ -1,7 +1,9 @@
-import pytest
-from llm_plotting.streamlit_helper import STAgentInterface
 import asyncio
 from io import BytesIO
+
+import pytest
+
+from llm_plotting.streamlit_helper import STAgentInterface
 
 
 @pytest.mark.e2e
@@ -18,5 +20,5 @@ def test_e2e(example_code, df, settings, agent_settings):
         df_simulated_upload,
         execute_st_funcs=False,
     )
-    chunks = asyncio.run(st_agent_interface.invoke())
+    _ = asyncio.run(st_agent_interface.invoke())
     assert True

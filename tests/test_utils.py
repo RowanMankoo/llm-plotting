@@ -1,7 +1,5 @@
 from unittest.mock import mock_open, patch
 
-import pytest
-
 from llm_plotting.prompt_helper import parse_requirements
 
 

@@ -1,15 +1,10 @@
-from langchain_core.prompts import (
-    ChatPromptTemplate,
-    MessagesPlaceholder,
-)
-from llm_plotting.prompt_helper import parse_requirements
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
+from llm_plotting.prompt_helper import parse_requirements
 
 IMAGE_SAVE_PATH = "figure.png"
 IMAGE_SAVE_PATHVALIDATION_TOOL_ACCEPTABLE_OUTPUT_MESSAGE = "The plot is legible"
-AVAILABLE_LIBRARIES = parse_requirements(
-    "llm_plotting/e2b/requirments.txt", names_only=True
-)
+AVAILABLE_LIBRARIES = parse_requirements("llm_plotting/e2b/requirments.txt", names_only=True)
 
 CODE_GENERATION_AGENT_SYSTEM_TEMPLATE = f"""
 You are a powerful code generation assistant who specializes in generating code \
@@ -51,12 +46,12 @@ You should validate if the plot is legible and if anything is majorly wrong with
 - Text is overlapping
 - Something is obviously wrong with the plot
 
-If you find anything wrong with the plot, please provide details on how to fix it in plain English and bullet point format, \
-and make sure not to return code.
+If you find anything wrong with the plot, please provide details on how to fix it in plain English and \
+bullet point format, and make sure not to return code.
 
-If the plot is sufficiently legible, please return {IMAGE_SAVE_PATHVALIDATION_TOOL_ACCEPTABLE_OUTPUT_MESSAGE } in the feedback. \
-If, from the description of the plot, you think legibility issues cannot be resolved with simple adjustments due to the complexity and size of the dataset, \
-please state so in the feedback.
+If the plot is sufficiently legible, please return {IMAGE_SAVE_PATHVALIDATION_TOOL_ACCEPTABLE_OUTPUT_MESSAGE } \
+in the feedback. If, from the description of the plot, you think legibility issues cannot be resolved with \
+simple adjustments due to the complexity and size of the dataset, please state so in the feedback.
 """
 
 
@@ -103,5 +98,6 @@ an image or answering questions about the data and you wish to validate it.
 If the plot is an image, this tool will validate the image and return a description of the observations \
 along with the code to fix the observations if any are found.
 
-If the code is for answering questions about the data, this tool will validate the code and return the output of the code.
+If the code is for answering questions about the data, this tool will validate the code and return the \
+output of the code.
 """

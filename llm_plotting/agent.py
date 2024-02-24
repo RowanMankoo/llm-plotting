@@ -1,8 +1,8 @@
 import pandas as pd
 from langchain.agents import AgentExecutor, create_openai_functions_agent
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-from langchain_openai import ChatOpenAI
 from langchain.memory import ConversationBufferMemory
+from langchain_openai import ChatOpenAI
 
 from llm_plotting.prompts import CODE_GENERATION_AGENT_PROMPT
 from llm_plotting.settings import AgentSettings, Settings
@@ -23,9 +23,7 @@ class MyStreamingCallback(StreamingStdOutCallbackHandler):
             print(token)
 
 
-def setup_agent_executor(
-    settings: Settings, agent_settings: AgentSettings, df: pd.DataFrame
-):
+def setup_agent_executor(settings: Settings, agent_settings: AgentSettings, df: pd.DataFrame):
 
     code_validation_tool = CodeValidationTool(
         df=df,
@@ -46,7 +44,7 @@ def setup_agent_executor(
     memory = ConversationBufferMemory(
         memory_key="chat_history",
         input_key="user_input",
-        output_key="output",  #'messages'
+        output_key="output",
         return_messages=True,
     )
 

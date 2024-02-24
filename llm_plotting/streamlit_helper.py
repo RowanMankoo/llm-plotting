@@ -1,4 +1,5 @@
 import base64
+import logging
 import textwrap
 from io import BytesIO
 from typing import Callable, Dict, List
@@ -7,18 +8,17 @@ import pandas as pd
 import streamlit as st
 from pydantic import BaseModel
 
-
-from llm_plotting.settings import AgentSettings, Settings
-from llm_plotting.tools import CodeValidationTool
 from llm_plotting.agent import setup_agent_executor
 from llm_plotting.prompt_helper import extract_metadata
+from llm_plotting.settings import AgentSettings, Settings
+from llm_plotting.tools import CodeValidationTool
+
+Logger = logging.getLogger(st.__name__)
 
 
 def display_and_get_agent_settings():
     with st.sidebar.expander("Agent Settings"):
-        max_iterations = st.number_input(
-            "max_iterations", min_value=1, max_value=10, value=4, step=1
-        )
+        max_iterations = st.number_input("max_iterations", min_value=1, max_value=10, value=4, step=1)
         code_generation_llm_temperature = st.slider(
             "code_generation_llm_temperature",
             min_value=0.0,
@@ -62,9 +62,7 @@ class STAgentInterface:
         self.execute_st_funcs = execute_st_funcs
 
     @staticmethod
-    def store_and_display_message(
-        st_func: Callable, args: List = [], kwargs: Dict = {}, role: str = None
-    ):
+    def store_and_display_message(st_func: Callable, args: List = [], kwargs: Dict = {}, role: str = None):
         st.session_state.messages.append(
             {
                 "role": role,
@@ -77,9 +75,7 @@ class STAgentInterface:
         STAgentInterface.display_message(st_func, args, kwargs, role)
 
     @staticmethod
-    def display_message(
-        st_func: Callable, args: List = [], kwargs: Dict = {}, role: str = None
-    ):
+    def display_message(st_func: Callable, args: List = [], kwargs: Dict = {}, role: str = None):
         if role is None:
             st_func(*args, **kwargs)
         else:
@@ -88,18 +84,12 @@ class STAgentInterface:
 
     @property
     def code_validation_tool(self):
-        return [
-            tool
-            for tool in self.agent_executor.tools
-            if isinstance(tool, CodeValidationTool)
-        ][0]
+        return [tool for tool in self.agent_executor.tools if isinstance(tool, CodeValidationTool)][0]
 
     async def invoke(self, user_input: str):
         chunks = []
 
-        async for chunk in self.agent_executor.astream(
-            {"user_input": user_input, "metadata_json": self.metadata_json}
-        ):
+        async for chunk in self.agent_executor.astream({"user_input": user_input, "metadata_json": self.metadata_json}):
             list_of_st_func_reprs = self.process_chunk(chunk)
             if self.execute_st_funcs:
                 for st_func_repr in list_of_st_func_reprs:
@@ -122,7 +112,8 @@ class STAgentInterface:
             elif "output" in chunk:
                 list_of_st_func_reprs = self._process_final_result(chunk)
             return list_of_st_func_reprs
-        except:
+        except Exception as e:
+            Logger.error(f"Error processing chunk: {e}")
             return [STFuncRepr(st_func=st.error, args=["Error rendering chunk"])]
 
     def _process_agent_action(self, chunk) -> List[STFuncRepr]:
@@ -133,7 +124,7 @@ class STAgentInterface:
         return [
             STFuncRepr(
                 st_func=st.subheader,
-                args=[f"Calling Tool:"],
+                args=["Calling Tool:"],
             ),
             STFuncRepr(
                 st_func=st.write,
@@ -141,7 +132,7 @@ class STAgentInterface:
             ),
             STFuncRepr(
                 st_func=st.markdown,
-                args=[f"**Code:**"],
+                args=["**Code:**"],
             ),
             STFuncRepr(
                 st_func=st.code,
@@ -150,7 +141,7 @@ class STAgentInterface:
             ),
             STFuncRepr(
                 st_func=st.markdown,
-                args=[f"**Description:**"],
+                args=["**Description:**"],
             ),
             STFuncRepr(
                 st_func=st.write,

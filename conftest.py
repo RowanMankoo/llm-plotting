@@ -1,6 +1,7 @@
-import pytest
 import pandas as pd
-from llm_plotting.settings import Settings, AgentSettings
+import pytest
+
+from llm_plotting.settings import AgentSettings, Settings
 
 
 @pytest.fixture
