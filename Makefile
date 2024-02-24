@@ -20,3 +20,6 @@ build_app:
 
 run_app:
 	docker run -p 5000:5000 my-app:latest
+
+run_tests:
+	poetry run pytest tests -v 

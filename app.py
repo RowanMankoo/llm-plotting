@@ -4,11 +4,14 @@ import warnings
 from io import BytesIO
 
 import nest_asyncio
+import numpy as np
 import pandas as pd
 import streamlit as st
+from PIL import Image
 from streamlit_extras.dataframe_explorer import dataframe_explorer
 from streamlit_modal import Modal
 
+from llm_plotting.assets.streamlit_txt import MAIN_INSTRUCTIONS, TECHNICAL_INFO
 from llm_plotting.settings import Settings
 from llm_plotting.streamlit_helper import STAgentInterface, display_and_get_agent_settings
 
@@ -23,25 +26,18 @@ def main():
     st_agent_interface = None
 
     st.title("LLM-Plotting Tool")
-    st.write(
-        """
-    Please upload a CSV file and provide a description of the plot you want to create from the dataset.
-    The tool will then perform the following steps:
-
-    1. Generate the necessary code to construct the desired plot.
-    2. Execute this code within a secure, sandboxed environment to produce the plot.
-    3. Validate the quality of the plot by sending the resulting image to a vision-based LLM.
-
-    This process will continue in a loop until the vision-based LLM approves of the plot or until the maximum number
-    of iterations is reached
-    """
-    )
+    st.write(MAIN_INSTRUCTIONS)
     modal = Modal(key="modal key", title="Information")
+
+    img = Image.open("llm_plotting/assets/agent_workflow.png")
+    # Convert the image data to a numpy array
+    img_array = np.array(img)
 
     info_button = st.button(label="technical info", key="info_button")
     if info_button:
         with modal.container():
-            st.markdown("testtesttesttesttesttesttesttest")
+            st.markdown(TECHNICAL_INFO)
+            st.image(img_array, caption="Agent Workflow", use_column_width=True)
         st.write("done")
 
     agent_settings = display_and_get_agent_settings()

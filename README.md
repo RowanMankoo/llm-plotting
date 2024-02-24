@@ -7,7 +7,7 @@ This project presents a Streamlit application that leverages a LLM agent to proc
 
 ![high_level_agent_setup](llm_plotting/assets/high_level_agent_setup.png)
 
-Above we have a high level overview of how the Streamlit app functions. The application functions by taking two inputs: a dataframe and a natural language request from the user to either query or plot the dataframe. Upon receiving these inputs, the application proceeds to extract metadata from the dataframe. This includes information such as column names, shape, data types, missing values, and other statistical summaries. This metadata is then stored in a JSON format and combined with the natural language request as an input prompt to help gnereate the code. This approach was chosen instead of sending the entire dataset to the LLM, as gives the LLM a sense of the data without exceeding token limits.
+Above we have a high level overview of how this Streamlit app functions. The application functions by taking two inputs: a dataframe and a natural language request from the user to either query or plot the dataframe. Upon receiving these inputs, the application proceeds to extract metadata from the dataframe. This includes information such as column names, shape, data types, missing values, and other statistical summaries. This metadata is then stored in a JSON format and combined with the natural language request as an input prompt to help gnereate the code. This approach was chosen instead of sending the entire dataset to the LLM, as gives the LLM a sense of the data without exceeding token limits.
 
 With this input prompt the agent begins to generate code to fulfill the user's request, this generated code is then sent to a code validation tool. The Agent iterates this process, generating and validating code until it produces an output that the validation tool approves. All the while the agent steps are being streamed to the user via the Streamlit app. For a more detailed view of this workflow, please refer to the diagram below.
 
@@ -43,7 +43,8 @@ To set this up please navigate to the e2b folder and follow these steps:
 
 ## V2 ideas
 
-- add snapshot pytests
-- add ability to upload multiple df's
+- Add snapshot pytests
+- Add ability to upload multiple df's
 - Example dataset currently taken from https://www.kaggle.com/datasets/hummaamqaasim/jobs-in-data?resource=download
-    - maybe use 
+    - Maybe use python package to load example dataset for tests
+- Add support for more python packages
