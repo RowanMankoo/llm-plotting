@@ -10,4 +10,5 @@ COPY . /app
 
 EXPOSE 5000
 
-CMD ["poetry", "run", "streamlit", "run", "app.py"]
+CMD ["poetry", "run", "streamlit", "run", "app.py", "--server.port", "5000"]
+

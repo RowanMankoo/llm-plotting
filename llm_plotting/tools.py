@@ -126,7 +126,7 @@ class CodeValidationTool(BaseTool):
         payload = {
             "model": "gpt-4-vision-preview",
             "messages": generate_validation_llm_messages(image_in_base64, description, code),
-            "max_tokens": 300,
+            "max_tokens": 1000,
             "temperature": self.temperature,
         }
 

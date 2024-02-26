@@ -5,3 +5,5 @@
 !.env
 !Dockerfile
 !llm_plotting/*.py
+!llm_plotting/assets/*
+!llm_plotting/e2b/requirments.txt

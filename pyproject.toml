@@ -7,7 +7,7 @@ readme = "README.md"
 packages = [{include = "llm_plotting"}]
 
 [tool.poetry.dependencies]
-python = "3.10.0"
+python = "^3.10"
 langchain = "^0.1.9"
 pandas = "^2.2.1"
 openai = "^1.12.0"
