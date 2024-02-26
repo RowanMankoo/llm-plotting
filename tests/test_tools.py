@@ -1,7 +1,7 @@
+import pytest
+
 from llm_plotting.prompts import IMAGE_SAVE_PATH
 from llm_plotting.tools import CodeValidationTool
-
-import pytest
 
 
 @pytest.fixture
@@ -26,7 +26,4 @@ def test_CodeValidationTool___modify_code(settings, example_code, df):
     code_validation_tool = CodeValidationTool(settings=settings, df=df)
     modified_code = code_validation_tool._modify_code(example_code)
 
-    assert (
-        f"import plotly.io as pio\npio.write_image(fig, '{IMAGE_SAVE_PATH }')"
-        in modified_code
-    )
+    assert f"import plotly.io as pio\npio.write_image(fig, '{IMAGE_SAVE_PATH }')" in modified_code

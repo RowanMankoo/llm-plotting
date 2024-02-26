@@ -4,27 +4,17 @@ import warnings
 from io import BytesIO
 
 import nest_asyncio
-import numpy as np
 import pandas as pd
 import streamlit as st
-from PIL import Image
 from streamlit_extras.dataframe_explorer import dataframe_explorer
-from streamlit_modal import Modal
 
 from llm_plotting.assets.streamlit_txt import MAIN_INSTRUCTIONS
 from llm_plotting.settings import Settings
-from llm_plotting.streamlit_helper import (
-    STAgentInterface,
-    display_and_get_agent_settings,
-    display_popup_message,
-)
+from llm_plotting.streamlit_helper import STAgentInterface, display_and_get_agent_settings, display_popup_message
 
-# TODO: figure this out?
 nest_asyncio.apply()
 Logger = logging.getLogger(st.__name__)
-warnings.filterwarnings(
-    "ignore", category=UserWarning, module="streamlit_extras.dataframe_explorer"
-)
+warnings.filterwarnings("ignore", category=UserWarning, module="streamlit_extras.dataframe_explorer")
 
 
 def main():
@@ -45,9 +35,7 @@ def main():
             st.session_state.uploaded_file = uploaded_file.getvalue()
 
             uploaded_file.seek(0)
-            st_agent_interface = STAgentInterface(
-                settings, agent_settings, uploaded_file
-            )
+            st_agent_interface = STAgentInterface(settings, agent_settings, uploaded_file)
             st.session_state.st_agent_interface = st_agent_interface
             st.session_state.messages = []
 
@@ -64,9 +52,7 @@ def main():
         filtered_df = dataframe_explorer(pd.read_csv(uploaded_file), case=False)
         st.dataframe(filtered_df)
     else:
-        st.markdown(
-            "The dataset will be displayed below once you upload a CSV file and confirm the settings."
-        )
+        st.markdown("The dataset will be displayed below once you upload a CSV file and confirm the settings.")
 
     st.markdown("---")
 
@@ -100,9 +86,7 @@ def main():
                     with st.spinner("Running Agent..."):
                         asyncio.run(st_agent_interface.invoke(user_input))
                 else:
-                    st.error(
-                        "You must confirm the settings before generating the plot."
-                    )
+                    st.error("You must confirm the settings before generating the plot.")
             except Exception as e:
                 st.error(f"Error: {e}")
         else:

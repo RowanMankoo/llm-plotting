@@ -1,4 +1,3 @@
-import asyncio
 from io import BytesIO
 
 import pytest
