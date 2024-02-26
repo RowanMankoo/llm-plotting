@@ -17,8 +17,8 @@ def parse_requirements(requirments_file_path: str, names_only: bool = False) -> 
             if names_only:
                 result += f"{package}, "
             else:
-                result += f'{package} = "{version}"\n'
-    return result.rstrip(", ") if names_only else result
+                result += f'{package} = "{version}", '
+    return result.rstrip(", ")
 
 
 def extract_metadata(df: pd.DataFrame, col_limit=150):

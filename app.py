@@ -11,14 +11,20 @@ from PIL import Image
 from streamlit_extras.dataframe_explorer import dataframe_explorer
 from streamlit_modal import Modal
 
-from llm_plotting.assets.streamlit_txt import MAIN_INSTRUCTIONS, TECHNICAL_INFO
+from llm_plotting.assets.streamlit_txt import MAIN_INSTRUCTIONS
 from llm_plotting.settings import Settings
-from llm_plotting.streamlit_helper import STAgentInterface, display_and_get_agent_settings
+from llm_plotting.streamlit_helper import (
+    STAgentInterface,
+    display_and_get_agent_settings,
+    display_popup_message,
+)
 
 # TODO: figure this out?
 nest_asyncio.apply()
 Logger = logging.getLogger(st.__name__)
-warnings.filterwarnings("ignore", category=UserWarning, module="streamlit_extras.dataframe_explorer")
+warnings.filterwarnings(
+    "ignore", category=UserWarning, module="streamlit_extras.dataframe_explorer"
+)
 
 
 def main():
@@ -27,18 +33,7 @@ def main():
 
     st.title("LLM-Plotting Tool")
     st.write(MAIN_INSTRUCTIONS)
-    modal = Modal(key="modal key", title="Information")
-
-    img = Image.open("llm_plotting/assets/agent_workflow.png")
-    # Convert the image data to a numpy array
-    img_array = np.array(img)
-
-    info_button = st.button(label="technical info", key="info_button")
-    if info_button:
-        with modal.container():
-            st.markdown(TECHNICAL_INFO)
-            st.image(img_array, caption="Agent Workflow", use_column_width=True)
-        st.write("done")
+    display_popup_message()
 
     agent_settings = display_and_get_agent_settings()
     uploaded_file = st.sidebar.file_uploader("Upload CSV", type="csv")
@@ -50,13 +45,18 @@ def main():
             st.session_state.uploaded_file = uploaded_file.getvalue()
 
             uploaded_file.seek(0)
-            st_agent_interface = STAgentInterface(settings, agent_settings, uploaded_file)
+            st_agent_interface = STAgentInterface(
+                settings, agent_settings, uploaded_file
+            )
             st.session_state.st_agent_interface = st_agent_interface
             st.session_state.messages = []
 
     st.markdown("---")
     st.subheader("Dataset Explorer")
-    st.write("Explore the dataset to understand its structure and contents.")
+    st.write(
+        "Explore the dataset to understand its structure and contents. \
+        Please note you can also ask the agent directly questions about the dataset."
+    )
 
     uploaded_file = st.session_state.get("uploaded_file", None)
     if uploaded_file is not None:
@@ -64,7 +64,9 @@ def main():
         filtered_df = dataframe_explorer(pd.read_csv(uploaded_file), case=False)
         st.dataframe(filtered_df)
     else:
-        st.markdown("The dataset will be displayed below once you upload a CSV file and confirm the settings.")
+        st.markdown(
+            "The dataset will be displayed below once you upload a CSV file and confirm the settings."
+        )
 
     st.markdown("---")
 
@@ -98,7 +100,9 @@ def main():
                     with st.spinner("Running Agent..."):
                         asyncio.run(st_agent_interface.invoke(user_input))
                 else:
-                    st.error("You must confirm the settings before generating the plot.")
+                    st.error(
+                        "You must confirm the settings before generating the plot."
+                    )
             except Exception as e:
                 st.error(f"Error: {e}")
         else:
