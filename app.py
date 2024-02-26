@@ -69,7 +69,6 @@ def main():
         STAgentInterface.display_message(st_func, args, kwargs, role)
 
     if user_input := st.chat_input(
-        # "Describe the plot you wish to construct out of the dataset",
         "Please enter request here",
     ):
         if uploaded_file is not None:
