@@ -11,7 +11,7 @@ class Settings(BaseSettings):
         extra = "allow"
 
 
-class AgentSettings(BaseModel ):
+class AgentSettings(BaseModel):
     max_iterations: int = 5
     code_generation_llm_temperature: float = 0
     image_validation_llm_temperature: float = 0
